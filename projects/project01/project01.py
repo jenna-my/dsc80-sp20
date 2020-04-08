@@ -10,15 +10,15 @@ import numpy as np
 
 def get_assignment_names(grades):
     '''
-    get_assignment_names takes in a dataframe like grades and returns 
+    get_assignment_names takes in a dataframe like grades and returns
     a dictionary with the following structure:
 
-    The keys are the general areas of the syllabus: lab, project, 
+    The keys are the general areas of the syllabus: lab, project,
     midterm, final, disc, checkpoint
 
-    The values are lists that contain the assignment names of that type. 
-    For example the lab assignments all have names of the form labXX where XX 
-    is a zero-padded two digit number. See the doctests for more details.    
+    The values are lists that contain the assignment names of that type.
+    For example the lab assignments all have names of the form labXX where XX
+    is a zero-padded two digit number. See the doctests for more details.
 
     :Example:
     >>> grades_fp = os.path.join('data', 'grades.csv')
@@ -31,8 +31,23 @@ def get_assignment_names(grades):
     >>> 'project02' in names['project']
     True
     '''
-    
-    return ...
+
+def get_assignment_names(df):
+
+    names = {'lab':[], 'project': [], 'midterm':['Midterm'], 'final':['Final'], 'disc':[], 'checkpoint':[]}
+
+    #is it always up to 10?
+    for col in df.columns:
+        if ('lab' in col) and (len(col) == 5):
+            names['lab'].append(col)
+        elif ('project' in col) and (len(col) == 9):
+            names['project'].append(col)
+        elif ('discussion' in col) and (len(col) == 12):
+            names['disc'].append(col)
+        elif ('checkpoint' in col) and (len(col) == 22):
+            names['checkpoint'].append(col)
+
+    return names
 
 
 # ---------------------------------------------------------------------
@@ -43,9 +58,9 @@ def get_assignment_names(grades):
 def projects_total(grades):
     '''
     projects_total that takes in grades and computes the total project grade
-    for the quarter according to the syllabus. 
+    for the quarter according to the syllabus.
     The output Series should contain values between 0 and 1.
-    
+
     :Example:
     >>> grades_fp = os.path.join('data', 'grades.csv')
     >>> grades = pd.read_csv(grades_fp)
@@ -55,8 +70,40 @@ def projects_total(grades):
     >>> 0.7 < out.mean() < 0.9
     True
     '''
-    return ...
+    names = get_assignment_names(grades)
 
+    copy = grades.copy()
+    project_scores = []
+
+    #loop thru projects
+    for project_name in names['project']:
+        #check if theres a free response
+        if project_name + '_free_response' in copy.columns:
+            project_fr_name = project_name + '_free_response'
+        else:
+            project_fr_name = None
+        #handle NaN values to get 0 score
+        copy[project_name] = copy[project_name].fillna(0)
+        if project_fr_name != None: #free response exists
+            copy[project_fr_name] = copy[project_fr_name].fillna(0)
+
+        #numerator
+        if project_fr_name != None: #free response exists
+            points = copy[project_name] + copy[project_fr_name]
+        else:
+            points = copy[project_name]
+        #denominator
+        if project_fr_name != None: #free response exists
+            total_points = copy[project_name + ' - Max Points'] + copy[project_fr_name + ' - Max Points']
+        else:
+            total_points = copy[project_name + ' - Max Points']
+
+        #compute scores for this project
+        score = points/total_points
+        project_scores.append(score)
+
+    total_scores = sum(project_scores) / len(names['project']) #divided by number of projects
+    return total_scores
 
 # ---------------------------------------------------------------------
 # Question # 3
@@ -65,9 +112,9 @@ def projects_total(grades):
 
 def last_minute_submissions(grades):
     """
-    last_minute_submissions takes in the dataframe 
-    grades and a Series indexed by lab assignment that 
-    contains the number of submissions that were turned 
+    last_minute_submissions takes in the dataframe
+    grades and a Series indexed by lab assignment that
+    contains the number of submissions that were turned
     in on time by the student, yet marked 'late' by Gradescope.
 
     :Example:
@@ -82,7 +129,26 @@ def last_minute_submissions(grades):
     8
     """
 
-    return ...
+    copy = grades.copy()
+    names = get_assignment_names(grades)
+    late_submissions = {}
+
+    for lab in names['lab']:
+        copy1 = copy[copy[lab + ' - Lateness (H:M:S)'] != '00:00:00']
+        #only marked late submissions are left
+
+        copy2 = copy1[copy1[lab + ' - Lateness (H:M:S)'].str.startswith('0')]
+        #only late submissions that are less than 10 hours late left
+
+        copy3 = copy1[~copy1[lab + ' - Lateness (H:M:S)'].str.startswith('09')]
+        #deleted ppl who submitted 9 hours late
+        #only late submissions that are less than 9 hours late left
+
+        num_lates = len(copy2.index)
+        late_submissions[lab] = num_lates
+
+    s = pd.Series(late_submissions)
+    return s
 
 
 # ---------------------------------------------------------------------
@@ -91,7 +157,7 @@ def last_minute_submissions(grades):
 
 def lateness_penalty(col):
     """
-    lateness_penalty takes in a 'lateness' column and returns 
+    lateness_penalty takes in a 'lateness' column and returns
     a column of penalties according to the syllabus.
 
     :Example:
@@ -103,7 +169,7 @@ def lateness_penalty(col):
     >>> set(out.unique()) <= {1.0, 0.9, 0.8, 0.5}
     True
     """
-        
+
     return ...
 
 
@@ -117,7 +183,7 @@ def process_labs(grades):
     a dataframe of processed lab scores. The output should:
       * share the same index as grades,
       * have columns given by the lab assignment names (e.g. lab01,...lab10)
-      * have values representing the lab grades for each assignment, 
+      * have values representing the lab grades for each assignment,
         adjusted for Lateness and scaled to a score between 0 and 1.
 
     :Example:
@@ -139,10 +205,10 @@ def process_labs(grades):
 
 def lab_total(processed):
     """
-    lab_total takes in dataframe of processed assignments (like the output of 
+    lab_total takes in dataframe of processed assignments (like the output of
     Question 5) and computes the total lab grade for each student according to
-    the syllabus (returning a Series). 
-    
+    the syllabus (returning a Series).
+
     Your answers should be proportions between 0 and 1.
 
     :Example:
@@ -174,7 +240,7 @@ def total_points(grades):
     >>> 0.7 < out.mean() < 0.9
     True
     """
-        
+
     return ...
 
 
@@ -195,7 +261,7 @@ def final_grades(total):
 
 def letter_proportions(grades):
     """
-    letter_proportions takes in the dataframe grades 
+    letter_proportions takes in the dataframe grades
     and outputs a Series that contains the proportion
     of the class that received each grade.
 
@@ -241,7 +307,7 @@ def simulate_pval(grades, N):
 
 def total_points_with_noise(grades):
     """
-    total_points_with_noise takes in a dataframe like grades, 
+    total_points_with_noise takes in a dataframe like grades,
     adds noise to the assignments as described in notebook, and returns
     the total scores of each student calculated with noisy grades.
 
@@ -264,7 +330,7 @@ def total_points_with_noise(grades):
 
 def short_answer():
     """
-    short_answer returns (hard-coded) answers to the 
+    short_answer returns (hard-coded) answers to the
     questions listed in the notebook. The answers should be
     given in a list with the same order as questions.
 
@@ -314,7 +380,7 @@ def check_for_graded_elements():
     >>> check_for_graded_elements()
     True
     """
-    
+
     for q, elts in GRADED_FUNCTIONS.items():
         for elt in elts:
             if elt not in globals():
