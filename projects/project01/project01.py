@@ -32,12 +32,9 @@ def get_assignment_names(grades):
     True
     '''
 
-def get_assignment_names(df):
-
     names = {'lab':[], 'project': [], 'midterm':['Midterm'], 'final':['Final'], 'disc':[], 'checkpoint':[]}
 
-    #is it always up to 10?
-    for col in df.columns:
+    for col in grades.columns:
         if ('lab' in col) and (len(col) == 5):
             names['lab'].append(col)
         elif ('project' in col) and (len(col) == 9):
@@ -129,26 +126,28 @@ def last_minute_submissions(grades):
     8
     """
 
-    copy = grades.copy()
+    late_tag = ' - Lateness (H:M:S)'
+
     names = get_assignment_names(grades)
+
     late_submissions = {}
 
     for lab in names['lab']:
-        copy1 = copy[copy[lab + ' - Lateness (H:M:S)'] != '00:00:00']
-        #only marked late submissions are left
 
-        copy2 = copy1[copy1[lab + ' - Lateness (H:M:S)'].str.startswith('0')]
-        #only late submissions that are less than 10 hours late left
+        gradescope_late = grades.copy()
 
-        copy3 = copy1[~copy1[lab + ' - Lateness (H:M:S)'].str.startswith('09')]
-        #deleted ppl who submitted 9 hours late
-        #only late submissions that are less than 9 hours late left
+        gradescope_late = gradescope_late[gradescope_late[lab + late_tag] != '00:00:00']
 
-        num_lates = len(copy2.index)
-        late_submissions[lab] = num_lates
+        gradescope_late[lab + late_tag] = gradescope_late[lab + late_tag].str.slice(stop = 2)
 
-    s = pd.Series(late_submissions)
-    return s
+        gradescope_late[lab + late_tag] = gradescope_late[lab + late_tag].astype(int)
+
+        error_late = gradescope_late.loc[gradescope_late[lab + late_tag] < 9]
+
+        late_submissions[lab] = len(error_late)
+
+    series = pd.Series(late_submissions)
+    return series
 
 
 # ---------------------------------------------------------------------
@@ -170,7 +169,29 @@ def lateness_penalty(col):
     True
     """
 
-    return ...
+    #make series, starting with all 1.0 penalties
+    penalties = pd.Series(1.0, index = col.index)
+
+    #convert times to numbers
+    hours = col.str.slice(stop = 2)
+    hours = hours.astype(int)
+
+    #late 1 week (before 9 hours doesnt count)
+    week_late = hours[hours.between(9, 168)]
+    week_late_indices = week_late.index.values
+    penalties[week_late_indices] = 0.9
+
+    #late 2 weeks
+    two_weeks = hours[hours.between(169, 336)]
+    two_weeks_indices = two_weeks.index.values
+    penalties[two_weeks_indices] = 0.8
+
+    #beyond
+    beyond = hours[hours >= 337]
+    beyond_indices = beyond.index.values
+    penalties[beyond_indices] = 0.5
+
+    return penalties
 
 
 # ---------------------------------------------------------------------
