@@ -11,11 +11,11 @@ import numpy as np
 
 def consecutive_ints(ints):
     """
-    consecutive_ints tests whether a list contains two 
+    consecutive_ints tests whether a list contains two
     adjacent elements that are consecutive integers.
 
     :param ints: a list of integers
-    :returns: a boolean value if ints contains two 
+    :returns: a boolean value if ints contains two
     adjacent elements that are consecutive integers.
 
     :Example:
@@ -37,7 +37,7 @@ def consecutive_ints(ints):
 
 
 # ---------------------------------------------------------------------
-# Question # 1 
+# Question # 1
 # ---------------------------------------------------------------------
 
 def median(nums):
@@ -49,7 +49,7 @@ def median(nums):
 
     :param nums: a non-empty list of numbers.
     :returns: the median of the list.
-    
+
     :Example:
     >>> median([6, 5, 4, 3, 2]) == 4
     True
@@ -58,9 +58,15 @@ def median(nums):
     >>> median([1, 2, 3, 4]) == 2.5
     True
     """
-    
-    return ...
+    #sort in ascending order
+    nums.sort()
 
+    if len(nums) % 2 == 0: #if list has even length
+        elem1 = nums[(len(nums) // 2) - 1]
+        elem2 = nums[len(nums) // 2]
+        return (elem1 + elem2) / 2
+    else:
+        return nums[len(nums) // 2]
 
 # ---------------------------------------------------------------------
 # Question # 2
@@ -82,9 +88,15 @@ def same_diff_ints(ints):
     >>> same_diff_ints([1,3,5,7,9])
     False
     """
-
-    return ...
-
+    if len(ints) == 0:
+        return False
+    for i in range(1, len(ints)): #represent num of places apart
+        for j in range(len(ints)): #iterate through each element in list
+            if j + i >= len(ints): #no more elems to look at for this iteration
+                break
+            elif abs(ints[j] - ints[j + i]) == i: #equal places and distances
+                return True
+    return False
 
 # ---------------------------------------------------------------------
 # Question # 3
@@ -92,7 +104,7 @@ def same_diff_ints(ints):
 
 def prefixes(s):
     """
-    prefixes returns a string of every 
+    prefixes returns a string of every
     consecutive prefix of the input string.
 
     :param s: a string.
@@ -106,10 +118,11 @@ def prefixes(s):
     >>> prefixes('aaron')
     'aaaaaraaroaaron'
     """
-
-
-    return ...
-
+    output = ''
+    for i in range(len(s) + 1):
+        add = s[0:i]
+        output += add
+    return output
 
 # ---------------------------------------------------------------------
 # Question # 4
@@ -117,13 +130,13 @@ def prefixes(s):
 
 def evens_reversed(N):
     """
-    evens_reversed returns a string containing 
+    evens_reversed returns a string containing
     all even integers from  1  to  N  (inclusive)
-    in reversed order, separated by spaces. 
+    in reversed order, separated by spaces.
     Each integer is zero padded.
 
     :param N: a non-negative integer.
-    :returns: a string containing all even integers 
+    :returns: a string containing all even integers
     from 1 to N reversed, formatted as decsribed above.
 
     :Example:
@@ -132,8 +145,22 @@ def evens_reversed(N):
     >>> evens_reversed(10)
     '10 08 06 04 02'
     """
-    
-    return ...
+
+    if N == 0 or N == 1: #nothing returned
+        return ''
+
+    output = ''
+    num_pads = len(str(N)) #num of digits that will be length of each integer
+
+    for i in range(N, 1, -1):
+        if (i % 2) == 0:
+            str_int = str(i)
+            str_int = str_int.zfill(num_pads) #zeropad the integer
+            output += str_int
+            output += ' '
+
+    output = output.strip() #remove whitespace
+    return output
 
 
 # ---------------------------------------------------------------------
@@ -142,7 +169,7 @@ def evens_reversed(N):
 
 def last_chars(fh):
     """
-    last_chars takes a file object and returns a 
+    last_chars takes a file object and returns a
     string consisting of the last character of the line.
 
     :param fh: a file object to read from.
@@ -153,8 +180,11 @@ def last_chars(fh):
     >>> last_chars(open(fp))
     'hrg'
     """
-
-    return ...
+    output = ''
+    with open(fh.name) as fh:
+        for line in fh:
+            output += line[-2]
+    return output
 
 
 # ---------------------------------------------------------------------
@@ -178,9 +208,10 @@ def arr_1(A):
     >>> np.all(out >= A)
     True
     """
-
-    return ...
-
+    copy = np.copy(A)
+    indices = np.array(range(copy.size)) #array of indices
+    roots = np.sqrt(indices)
+    return copy + roots
 
 def arr_2(A):
     """
@@ -199,9 +230,8 @@ def arr_2(A):
     >>> out.dtype == np.dtype('bool')
     True
     """
-
-    return ...
-
+    B = (A % 16 == 0)
+    return B
 
 def arr_3(A):
     """
@@ -223,15 +253,20 @@ def arr_3(A):
     >>> out.max() == 0.03
     True
     """
+    copy = np.copy(A)
 
-    return ...
+    diff = np.ediff1d(copy) #differences
+    copy = np.delete(copy, copy.size - 1) #remove last elem
+    diff = diff/copy
+    output = np.round(diff, 2)
+    return output
 
 
 def arr_4(A):
     """
-    Create a function arr_4 that takes in A and 
-    returns the day on which you can buy at least 
-    one share from 'left-over' money. If this never 
+    Create a function arr_4 that takes in A and
+    returns the day on which you can buy at least
+    one share from 'left-over' money. If this never
     happens, return -1. The first stock purchase occurs on day 0
     :param A: a 1d numpy array of stock prices.
     :returns: an integer of the total number of shares.
@@ -245,8 +280,16 @@ def arr_4(A):
     >>> out == 1
     True
     """
+    copy = np.copy(A)
+    leftovers = 20 % A
+    total_leftovers = np.cumsum(leftovers) #total leftovers after each day
+    enough_left = total_leftovers >= A #boolean array to determine whether we have enough to buy another stock for the day
 
-    return ...
+    if True in enough_left:
+        day = list(enough_left).index(True) #gets first index where we can buy
+        return day
+    else:
+        return -1
 
 
 # ---------------------------------------------------------------------
@@ -272,9 +315,66 @@ def movie_stats(movies):
     >>> isinstance(out.loc['second_lowest'], str)
     True
     """
+    def num_years():
+        """number of years covered in the dataset"""
+        years = movies['Year']
+        return ('num_years', years.nunique())
 
-    return ...
-    
+    def tot_movies():
+        """total number of movies over all years"""
+        total = movies['Number of Movies'].sum()
+        return ('tot_movies', total)
+
+    def yr_fewest_movies():
+        """year with fewest movies made (earliest)"""
+        copy = movies.copy()
+        year = copy.sort_values(['Number of Movies', 'Year']).reset_index(drop = True).Year.loc[0]
+        return ('yr_fewest_movies', year)
+
+    def avg_gross():
+        """average amount of money grossed over all years"""
+        avg = movies['Total Gross'].mean()
+        if avg is np.nan:
+            raise
+        return ('avg_gross', avg)
+
+    def highest_per_movie():
+        """The year with the highest gross per movie"""
+        copy = movies.copy()
+        copy['Gross Per Movie'] = copy['Total Gross'] / copy['Number of Movies'] #calculate gross per movie
+        year = copy.sort_values(['Gross Per Movie'], ascending = False).reset_index(drop = True).Year.loc[0]
+        return ('highest_per_movie', year)
+
+    def second_lowest():
+        """name of the top movie during the second lowest (total) grossing year"""
+        copy = movies.copy()
+        name = copy.sort_values(['Total Gross']).reset_index(drop = True)['#1 Movie'].loc[1]
+        return ('second_lowest', name)
+
+    def avg_after_harry():
+        """avg number of movies made the year after an HP movie was #1 movie"""
+        copy = movies.copy()
+        copy = copy.sort_values(['Year']).reset_index(drop = True) #years early to present
+        harry_years = copy[copy['#1 Movie'].str.contains('Harry')].Year #years where harry potter was #1
+        next_years = harry_years + 1
+        check = list(next_years.values)
+        next_years_df = copy[copy['Year'].isin(check)]
+        avg = next_years_df['Number of Movies'].mean()
+        if avg is np.nan:
+            raise
+        return ('avg_after_harry', avg)
+
+    functions = [num_years(), tot_movies(), yr_fewest_movies(), avg_gross(), highest_per_movie(), second_lowest(), avg_after_harry()]
+    stats = {}
+    for fxn in functions:
+        try:
+            info = fxn
+            stats[info[0]] = info[1]
+        except:
+            continue
+    series = pd.Series(stats)
+
+    return series
 
 # ---------------------------------------------------------------------
 # Question # 8
@@ -282,12 +382,12 @@ def movie_stats(movies):
 
 def parse_malformed(fp):
     """
-    Parses and loads the malformed csv data into a 
-    properly formatted dataframe (as described in 
+    Parses and loads the malformed csv data into a
+    properly formatted dataframe (as described in
     the question).
 
     :param fh: file handle for the malformed csv-file.
-    :returns: a Pandas DataFrame of the data, 
+    :returns: a Pandas DataFrame of the data,
     as specificed in the question statement.
 
     :Example:
@@ -309,8 +409,35 @@ def parse_malformed(fp):
     >>> (dg == df.iloc[9:13]).all().all()
     True
     """
+    row_data=[]
+    cols = ['first', 'last', 'weight', 'height', 'geo']
 
-    return ...
+    with open(fp) as fh:
+
+        fh.readline() #skip first line (column names)
+
+        for line in fh:
+            #remove newline character
+            line = line.strip('\n')
+            elems = line.split(",") #all entries converted to string - last col value not split
+            elems = list(filter(None, elems)) #remove empty entries
+
+            #there should be 6 entries in the list now
+            for i in range(6):
+                elems[i] = elems[i].replace('"', '') #drop quotations in all values
+                if i == 2 or i == 3: #float columns
+                    elems[i] = float(elems[i])
+
+            #combine index 4 and 5 to make geo column
+            elems[4] = elems[4] + ',' + elems[5]
+            del elems[-1]
+            #add to row data
+            row_data.append(elems)
+
+    #make new dataframe
+    output = pd.DataFrame(row_data, columns = cols)
+    return output
+
 
 
 # ---------------------------------------------------------------------
@@ -342,7 +469,7 @@ def check_for_graded_elements():
     >>> check_for_graded_elements()
     True
     """
-    
+
     for q, elts in GRADED_FUNCTIONS.items():
         for elt in elts:
             if elt not in globals():

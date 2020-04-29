@@ -18,14 +18,14 @@ def question01(data, labels):
     >>> out.index.tolist() == labels
     True
     """
-
-    return ...
+    df = pd.DataFrame(data, index = labels)
+    return df
 
 
 def question02(ser):
     """
     Given a Pandas Series, outputs the
-    positions (an index or array) of 
+    positions (an index or array) of
     entries of ser that are multiples of 3.
 
     >>> ser = pd.Series([1, 3, 6, 9])
@@ -33,7 +33,5 @@ def question02(ser):
     >>> out.tolist() == [1, 2, 3]
     True
     """
-
-    return ...
-
-
+    multiples = ser[ser % 3 == 0]
+    return multiples.index.values
